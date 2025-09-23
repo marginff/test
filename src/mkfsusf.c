@@ -10,7 +10,7 @@ void usage()
 {
 	fprintf(stderr,
 	    "usage: %s [ -fsoptions ] special-device%s\n",
-	    getprogname(),
+	    //getprogname(),
 	    " [device-type]");
 	fprintf(stderr, "where fsoptions are:\n");
 	fprintf(stderr, "\t-E Erase previous disk content\n");
@@ -216,24 +216,24 @@ int main(int argc, char *argv[])
 	if (d_fd < 0 && !Nflag)
 		errx(1, "%s: ", special);
 
-    if (fstat(d_fd, &st) < 0)
+    	if (fstat(d_fd, &st) < 0)
 		err(1, "%s", special);
 
 	if (sectorsize == 0)
-		//if (ioctl(d_fd, BLKSSZGET, &sectorsize) == -1)
-			if (ioctl(d_fd, DIOCGSECTORSIZE,&sectorsize) == -1) 
+		if (ioctl(d_fd, BLKSSZGET, &sectorsize) == -1)
+			//if (ioctl(d_fd, DIOCGSECTORSIZE,&sectorsize) == -1) 
 		    	err(1, "can't get sector size");	
 	   
 	if (mediasize == 0)
-		if(ioctl(d_fd, DIOCGMEDIASIZE, &mediasize) == -1)
+		if(ioctl(d_fd, BLKGETSIZE64, &mediasize) == -1)
 			err(1, "can't get media size");
 
-	
+	fssize = mediasize / sectorsize;
 	if (fsize <= 0)
 		fsize = MAX(DFL_FRAGSIZE, sectorsize);
 	if (bsize <= 0)
 		bsize = MIN(DFL_BLKSIZE, 8 * fsize);
-
+	printf("123");
 	mkfs(d_name);
 
 	close(d_fd);

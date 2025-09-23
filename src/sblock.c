@@ -8,6 +8,7 @@ use_pwrite(void *devfd, uint64_t loc, void *buf, int size)
 {
 	int fd;
 
+	printf("sbloc: %i", loc);
 	fd = *(int *)devfd;
 	if (pwrite(fd, buf, size, loc) != size)
 		return (EIO);
@@ -90,7 +91,7 @@ ffs_calc_sbhash(struct fs *fs)
 	 * If newly read from disk, the caller is responsible for
 	 * verifying that fs->fs_sbsize <= SBLOCKSIZE.
 	 */
-	ckhash = calculate_crc32c(~0L, (void *)fs, fs->fs_sbsize);
+	ckhash = calculate_crc32c(~0L, (unsigned char *)(void *)fs, fs->fs_sbsize);
 	fs->fs_ckhash = save_ckhash;
 	return (ckhash);
 }
@@ -105,9 +106,9 @@ ffs_calc_sbhash(struct fs *fs)
  *     EIO: failed to write superblock summary information.
  */
 int
-ffs_sbput(void *devfd, struct fs *fs, uint64_t loc,
-    int (*writefunc)(void *devfd, uint64_t loc, void *buf, int size))
+ffs_sbput(void *devfd, struct fs *fs, uint64_t loc)
 {
+	printf("10\n");
 	struct fs_summary_info *fs_si;
 	int i, error, blks, size;
 	uint8_t *space;
@@ -117,19 +118,24 @@ ffs_sbput(void *devfd, struct fs *fs, uint64_t loc,
 	 * is an error, the superblock will not be marked as clean.
 	 */
 	if (fs->fs_si != NULL && fs->fs_csp != NULL) {
+		printf("8\n");
 		blks = howmany(fs->fs_cssize, fs->fs_fsize);
 		space = (uint8_t *)fs->fs_csp;
 		for (i = 0; i < blks; i += fs->fs_frag) {
+			printf("9\n");
 			size = fs->fs_bsize;
 			if (i + fs->fs_frag > blks)
 				size = (blks - i) * fs->fs_fsize;
-			if ((error = (*writefunc)(devfd,
+			printf("5\n");
+			if ((error = use_pwrite(devfd,
 			     (uint64_t)(fsbtodb(fs, fs->fs_csaddr + i) << 9),
 			     space, size)) != 0)
 				return (error);
+			printf("6\n");
 			space += size;
 		}
 	}
+	printf("7\n");
 	fs->fs_fmod = 0;
 	ffs_oldfscompat_write(fs);
 #ifdef _KERNEL
@@ -141,7 +147,7 @@ ffs_sbput(void *devfd, struct fs *fs, uint64_t loc,
 	fs_si = fs->fs_si;
 	fs->fs_si = NULL;
 	fs->fs_ckhash = ffs_calc_sbhash(fs);
-	error = (*writefunc)(devfd, loc, fs, fs->fs_sbsize);
+	error = use_pwrite(devfd, loc, fs, fs->fs_sbsize);
 	/*
 	 * A negative error code is returned when a copy of the
 	 * superblock has been made which is discarded when the I/O
@@ -168,11 +174,18 @@ ffs_sbput(void *devfd, struct fs *fs, uint64_t loc,
 int
 sbput(int devfd, struct fs *fs, int numaltwrite)
 {
+	printf("3\n");
 	struct csum *savedcsp;
 	uint64_t savedactualloc;
 	int i, error;
 
-	error = ffs_sbput(&devfd, fs, fs->fs_sblockactualloc, use_pwrite);
+	int *a = &devfd;
+	printf("12\n");
+	int b = fs->fs_sblockactualloc;
+	printf("13\n");
+	printf("11 %i %i\n", a, b);
+	error = ffs_sbput(&devfd, fs, fs->fs_sblockactualloc);
+	printf("4\n");
 	fflush(NULL); /* flush any messages */
 	if (error != 0 || numaltwrite == 0)
 		return (error);
@@ -183,8 +196,8 @@ sbput(int devfd, struct fs *fs, int numaltwrite)
 	}
 	for (i = 0; i < numaltwrite; i++) {
 		fs->fs_sblockactualloc = dbtob(fsbtodb(fs, cgsblock(fs, i)));
-		if ((error = ffs_sbput(&devfd, fs, fs->fs_sblockactualloc,
-		     use_pwrite)) != 0) {
+		if ((error = ffs_sbput(&devfd, fs, fs->fs_sblockactualloc
+		     )) != 0) {
 			fflush(NULL); /* flush any messages */
 			fs->fs_sblockactualloc = savedactualloc;
 			fs->fs_csp = savedcsp;
@@ -202,13 +215,13 @@ sbput(int devfd, struct fs *fs, int numaltwrite)
 int
 sbwrite(int all)
 {
-	struct fs *fs;
+	
 	int rv;
 
 	//ERROR(disk, NULL);
 
 
-	if ((errno = sbput(d_fd, fs, all ? fs->fs_ncg : 0)) != 0) {
+	if ((errno = sbput(d_fd, &sblock, all ? sblock.fs_ncg : 0)) != 0) {
 		switch (errno) {
 		case EIO:
 			err(1, "failed to write superblock");

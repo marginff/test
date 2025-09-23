@@ -445,6 +445,7 @@ struct fs {
 					/* old fs_rotbloff */
 	int32_t	 fs_magic;		/* magic number */
 };
+struct fs sblock;
 
 /* Sanity checking. */
 #ifdef CTASSERT

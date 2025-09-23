@@ -1,4 +1,4 @@
-
+#include "fs.h"
 
 #define POWEROF2(num)	(((num) & ((num) - 1)) == 0)
 //#include <inttypes.h>
@@ -59,6 +59,7 @@ bwrite(ufs2_daddr_t blockno, const void *data, size_t size)
 	int rv;
 	void *p2;
 
+	printf("bwrite: %i\n", blockno * bsize);
 
 	BUF_MALLOC(&p2, data, size);
 	if (p2 == NULL) {
@@ -87,6 +88,8 @@ bwrite(ufs2_daddr_t blockno, const void *data, size_t size)
 static void
 wtfs(ufs2_daddr_t bno, int size, char *bf)
 {
+	printf("WTFS\n");
+	if (Nflag) printf("NFLAG\n");
 	if (Nflag)
 		return;
 	if (bwrite(part_ofs + bno, bf, size) < 0)
@@ -97,7 +100,7 @@ wtfs(ufs2_daddr_t bno, int size, char *bf)
 void mkfs(char *fsys) {
 
 
-   	if ((sblock.fs_si = malloc(sizeof(struct fs_summary_info))) == NULL) {
+   	if ((sblock.fs_si = (struct fs_summary_info *)malloc(sizeof(struct fs_summary_info))) == NULL) {
 		printf("Superblock summary info allocation failed.\n");
 		exit(18);
 	}
@@ -106,7 +109,7 @@ void mkfs(char *fsys) {
 	if (Uflag)
 		sblock.fs_flags |= FS_DOSOFTDEP;
 	if (Lflag)
-		strlcpy(sblock.fs_volname, volumelabel, MAXVOLLEN);
+		strlcpy((char *)sblock.fs_volname, volumelabel, MAXVOLLEN);
 	if (Jflag)
 		sblock.fs_flags |= FS_GJOURNAL;
 	if (lflag)
@@ -122,6 +125,7 @@ void mkfs(char *fsys) {
 		printf("preposterous size %jd\n", (intmax_t)fssize);
 		exit(13);
 	}
+	printf("!11\n");
     wtfs(fssize - (realsectorsize / DEV_BSIZE), realsectorsize,
 		(char *)&sblock);
 	/*
@@ -506,8 +510,10 @@ retry:
 	 * Reference the summary information so it will also be written.
 	 */
 	sblock.fs_csp = fscs;
+	printf("1\n");
 	if (!Nflag && sbwrite(0) != 0)
 		err(1, "sbwrite: %s");
+	printf("2\n");
 	if (Xflag == 1) {
 		printf("** Exiting on Xflag 1\n");
 		exit(0);
@@ -530,7 +536,7 @@ retry:
 	 * Allocate space for two sets of inode blocks.
 	 */
 	long iobufsize = 2 * sblock.fs_bsize;
-	caddr_t iobuf;
+	void *iobuf;
 	if ((iobuf = calloc(1, iobufsize)) == 0) {
 		printf("Cannot allocate I/O buffer\n");
 		exit(38);

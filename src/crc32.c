@@ -12,7 +12,7 @@
  *  the lowest-order bit.  The X^32 term is "implied"; the LSB is the
  *  X^31 term, etc.  The X^0 term (usually shown as "+1") results in
  *  the MSB being 1
- *
+= *
  *  Note that the usual hardware shift register implementation, which
  *  is what we're using (we're merely optimizing it by doing eight-bit
  *  chunks at a time) shifts bits into the lowest-order term.  In our
@@ -220,7 +220,7 @@ static
 uint32_t
 singletable_crc32c(uint32_t crc, const void *buf, size_t size)
 {
-	const uint8_t *p = buf;
+	const uint8_t *p = (const unsigned char *)buf;
 
 	while (size--)
 		crc = crc32Table[(crc ^ *p++) & 0xff] ^ (crc >> 8);
@@ -746,7 +746,7 @@ multitable_crc32c(uint32_t crc32c,
 		return (crc32c);
 	}
 	to_even_word = (4 - (((uintptr_t) buffer) & 0x3));
-	return (crc32c_sb8_64_bit(crc32c, buffer, length, to_even_word));
+	return (crc32c_sb8_64_bit(crc32c, (const unsigned char *)buffer, length, to_even_word));
 }
 
 static uint32_t

@@ -15,17 +15,27 @@
 //#include <sys/vfs.h>
 #include <sys/param.h>
 #include <sys/mount.h>
-//#include <linux/limits.h>
+#include <linux/limits.h>
+#include <sys/param.h>
 #include <fstab.h>  
 #include <sys/ioctl.h>
-#include <sys/disk.h>
+//#include <sys/disk.h>
 //#include <linux/fs.h>
 #include <sys/errno.h>
+#include <time.h>
+#include <linux/ioctl.h>
 
+#ifdef __ILP32__
+#define MAXpHYS (128*1024)
+#else
+#define MAXPHYS (1024*1024)
+#endif
+#define DEV_BSHIFT 9
 #define	P_OSREL_CK_CYLGRP		1200046
 #define	P_OSREL_CK_SUPERBLOCK		1300000
 #define	P_OSREL_CK_INODE		1300005
 
+#define MAXBSIZE 65536
 #define BBSIZE			8192
 //#define MAXPATHLEN		4096
 #define AVFILESIZ		16384
@@ -85,9 +95,6 @@
 #define	DIOCGMEDIASIZE	_IOR('d', 129, off_t)	/* Get media size in bytes */
 //#define	_IOC(inout,group,num,len)	((unsigned long) \
 //	((inout) | (((len) & IOCPARM_MASK) << 16) | ((group) << 8) | (num)))
-#define	_IO(g,n)	_IOC(IOC_VOID,	(g), (n), 0)
-#define	_IOWINT(g,n)	_IOC(IOC_VOID,	(g), (n), sizeof(int))
-#define	_IOR(g,n,t)	_IOC(IOC_OUT,	(g), (n), sizeof(t))
 #define MAXPARTITIONS	8 /* XXX should be 20, but see PR276517 */
 
 /*
@@ -167,6 +174,6 @@ static char	device[MAXPATHLEN];
 ufs2_daddr_t part_ofs;
 
 int32_t d_fd;
-struct fs sblock;
+//struct fs sblock;
 char *d_name;
 static struct	csum *fscs;
