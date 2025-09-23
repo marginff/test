@@ -1,0 +1,75 @@
+/*
+ * A write function for use by user-level programs using sbput in libufs.
+ */
+static int
+use_pwrite(void *devfd, uint64_t loc, void *buf, int size)
+{
+	int fd;
+
+	fd = *(int *)devfd;
+	if (pwrite(fd, buf, size, loc) != size)
+		return (EIO);
+	return (0);
+}
+
+/*
+ * Write a superblock to the devfd device from the memory pointed to by fs.
+ * Write out the superblock summary information if it is present.
+ *
+ * If the write is successful, zero is returned. Otherwise one of the
+ * following error values is returned:
+ *     EIO: failed to write superblock.
+ *     EIO: failed to write superblock summary information.
+ */
+int
+ffs_sbput(void *devfd, struct fs *fs, uint64_t loc,
+    int (*writefunc)(void *devfd, uint64_t loc, void *buf, int size))
+{
+	struct fs_summary_info *fs_si;
+	int i, error, blks, size;
+	uint8_t *space;
+
+	return (error);
+}
+
+/*
+ * Write a superblock to the devfd device from the memory pointed to by fs.
+ * Also write out the superblock summary information but do not free the
+ * summary information memory.
+ *
+ * Additionally write out numaltwrite of the alternate superblocks. Use
+ * fs->fs_ncg to write out all of the alternate superblocks.
+ */
+int
+sbput(int devfd, struct fs *fs, int numaltwrite)
+{
+	struct csum *savedcsp;
+	uint64_t savedactualloc;
+	int i, error;
+
+	error = ffs_sbput(&devfd, fs, fs->fs_sblockactualloc, use_pwrite);
+	fflush(NULL); /* flush any messages */
+	if (error != 0 || numaltwrite == 0)
+		return (error);
+	savedactualloc = fs->fs_sblockactualloc;
+	if (fs->fs_si != NULL) {
+		savedcsp = fs->fs_csp;
+		fs->fs_csp = NULL;
+	}
+	for (i = 0; i < numaltwrite; i++) {
+		fs->fs_sblockactualloc = (uint64_t)(fsbtodb(fs, cgsblock(fs, i)) << 9);
+		if ((
+		1//	ffs_sbput(&devfd, fs, fs->fs_sblockactualloc, use_pwrite)
+			 ) != 0) {
+			fflush(NULL); /* flush any messages */
+			fs->fs_sblockactualloc = savedactualloc;
+			fs->fs_csp = savedcsp;
+			return (error);
+		}
+	}
+	fs->fs_sblockactualloc = savedactualloc;
+	if (fs->fs_si != NULL)
+		fs->fs_csp = savedcsp;
+	fflush(NULL); /* flush any messages */
+	return (0);
+}
