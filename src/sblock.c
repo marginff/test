@@ -235,3 +235,50 @@ sbwrite(int all)
 	}
 	return (0);
 }
+
+
+ssize_t
+bwrite(ufs2_daddr_t blockno, const void *data, size_t size)
+{
+	ssize_t cnt;
+	int rv;
+	void *p2;
+
+	printf("bwrite: %i\n", blockno * bsize);
+
+	BUF_MALLOC(&p2, data, size);
+	if (p2 == NULL) {
+		err(1, "allocate bounce buffer");
+		return (-1);
+	}
+	if (p2 != data)
+		memcpy(p2, data, size);
+	cnt = pwrite(d_fd, p2, size, (off_t)(blockno * bsize));
+	if (p2 != data)
+		free(p2);
+	if (cnt == -1) {
+		err(1, "write error to block device");
+		return (-1);
+	}
+	if ((size_t)cnt != size) {
+		err(1, "short write to block device");
+		return (-1);
+	}
+	return (cnt);
+}
+
+
+/*
+ * possibly write to disk
+ */
+static void
+wtfs(ufs2_daddr_t bno, int size, char *bf)
+{
+	printf("WTFS\n");
+	if (Nflag) printf("NFLAG\n");
+	if (Nflag)
+		return;
+	if (bwrite(part_ofs + bno, bf, size) < 0)
+		err(36, "wtfs: %d bytes at sector %jd", size, (intmax_t)bno);
+}
+

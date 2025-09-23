@@ -15,7 +15,7 @@
 //#include <sys/vfs.h>
 #include <sys/param.h>
 #include <sys/mount.h>
-#include <linux/limits.h>
+//#include <linux/limits.h>
 #include <sys/param.h>
 #include <fstab.h>  
 #include <sys/ioctl.h>
@@ -23,7 +23,7 @@
 //#include <linux/fs.h>
 #include <sys/errno.h>
 #include <time.h>
-#include <linux/ioctl.h>
+//#include <linux/ioctl.h>
 
 #ifdef __ILP32__
 #define MAXpHYS (128*1024)
@@ -177,3 +177,28 @@ int32_t d_fd;
 //struct fs sblock;
 char *d_name;
 static struct	csum *fscs;
+struct cg acg;
+char *iobuf;
+static long iobufsize;
+static const char *failmsg;
+
+/*
+ * Ensure that the buffer is aligned to the I/O subsystem requirements.
+ */
+#define BUF_MALLOC(newbufpp, data, size) {				     \
+	if (data != NULL && (((intptr_t)data) & (LIBUFS_BUFALIGN - 1)) == 0) \
+		*newbufpp = (void *)data;				     \
+	else								     \
+		*newbufpp = aligned_alloc(LIBUFS_BUFALIGN, size);	     \
+}
+
+
+static u_int32_t
+newfs_random(void)
+{
+	static u_int32_t nextnum = 1;
+
+	if (Rflag)
+		return (nextnum++);
+	return (arc4random());
+}

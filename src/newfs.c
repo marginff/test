@@ -15,16 +15,6 @@ static int ilog2(int val)
 	errx(1, "ilog2: %d is not a power of 2\n", val);
 }
 
-static u_int32_t
-newfs_random(void)
-{
-	static u_int32_t nextnum = 1;
-
-	if (Rflag)
-		return (nextnum++);
-	return (arc4random());
-}
-
 static int
 charsperline(void)
 {
@@ -42,59 +32,8 @@ charsperline(void)
 	return (columns);
 }
 
-/*
- * Ensure that the buffer is aligned to the I/O subsystem requirements.
- */
-#define BUF_MALLOC(newbufpp, data, size) {				     \
-	if (data != NULL && (((intptr_t)data) & (LIBUFS_BUFALIGN - 1)) == 0) \
-		*newbufpp = (void *)data;				     \
-	else								     \
-		*newbufpp = aligned_alloc(LIBUFS_BUFALIGN, size);	     \
-}
 
-ssize_t
-bwrite(ufs2_daddr_t blockno, const void *data, size_t size)
-{
-	ssize_t cnt;
-	int rv;
-	void *p2;
 
-	printf("bwrite: %i\n", blockno * bsize);
-
-	BUF_MALLOC(&p2, data, size);
-	if (p2 == NULL) {
-		err(1, "allocate bounce buffer");
-		return (-1);
-	}
-	if (p2 != data)
-		memcpy(p2, data, size);
-	cnt = pwrite(d_fd, p2, size, (off_t)(blockno * bsize));
-	if (p2 != data)
-		free(p2);
-	if (cnt == -1) {
-		err(1, "write error to block device");
-		return (-1);
-	}
-	if ((size_t)cnt != size) {
-		err(1, "short write to block device");
-		return (-1);
-	}
-	return (cnt);
-}
-
-/*
- * possibly write to disk
- */
-static void
-wtfs(ufs2_daddr_t bno, int size, char *bf)
-{
-	printf("WTFS\n");
-	if (Nflag) printf("NFLAG\n");
-	if (Nflag)
-		return;
-	if (bwrite(part_ofs + bno, bf, size) < 0)
-		err(36, "wtfs: %d bytes at sector %jd", size, (intmax_t)bno);
-}
 
 
 void mkfs(char *fsys) {
@@ -548,8 +487,8 @@ retry:
 	uint cg, j;
 	char tmpbuf[100];
 	for (cg = 0; cg < sblock.fs_ncg; cg++) {
-		//if (!Nflag)
-		//	initcg(cg, utime);
+		if (!Nflag)
+			initcg(cg, utime);
 		j = snprintf(tmpbuf, sizeof(tmpbuf), " %jd%s",
 		    (intmax_t)fsbtodb(&sblock, cgsblock(&sblock, cg)),
 		    cg < (sblock.fs_ncg-1) ? "," : "");
