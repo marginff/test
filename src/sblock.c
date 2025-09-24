@@ -253,7 +253,7 @@ bwrite(ufs2_daddr_t blockno, const void *data, size_t size)
 	}
 	if (p2 != data)
 		memcpy(p2, data, size);
-	cnt = pwrite(d_fd, p2, size, (off_t)(blockno * bsize));
+	cnt = pwrite(d_fd, p2, size, (off_t)(blockno * sectorsize));
 	if (p2 != data)
 		free(p2);
 	if (cnt == -1) {
@@ -274,7 +274,7 @@ bwrite(ufs2_daddr_t blockno, const void *data, size_t size)
 static void
 wtfs(ufs2_daddr_t bno, int size, char *bf)
 {
-	printf("WTFS\n");
+	printf("WTFS %i %i %i\n", bno, size, part_ofs);
 	if (Nflag) printf("NFLAG\n");
 	if (Nflag)
 		return;

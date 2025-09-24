@@ -174,10 +174,18 @@ static char	device[MAXPATHLEN];
 ufs2_daddr_t part_ofs;
 
 int32_t d_fd;
-//struct fs sblock;
+
+
 char *d_name;
 static struct	csum *fscs;
-struct cg acg;
+
+struct unionacg {
+	struct cg d_cg;
+	char d_buf[MAXBSIZE];
+};
+struct unionacg d_acg;
+#define acg d_acg.d_cg
+
 char *iobuf;
 static long iobufsize;
 static const char *failmsg;

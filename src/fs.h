@@ -624,6 +624,7 @@ struct cg {
 	uint32_t cg_ckhash;		/* check-hash of this cg */
 	ufs_time_t cg_time;		/* time last written */
 	int64_t	 cg_sparecon64[3];	/* reserved for future use */
+	//char d_buf[MAXBSIZE];
 	/* actually longer - space used for cylinder group maps */
 };
 

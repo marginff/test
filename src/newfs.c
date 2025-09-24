@@ -248,6 +248,7 @@ retry:
 		    origdensity, density);
 	}
 	origdensity = density;
+	printf("freeze 0\n");
 	for (;;) {
 		fragsperinode = MAX(numfrags(&sblock, density), 1);
 		if (fragsperinode < minfragsperinode) {
@@ -280,7 +281,7 @@ retry:
 	}
 	if (density != origdensity)
 		printf("density reduced from %d to %d\n", origdensity, density);
-
+	printf("freeze 1\n");
 	/*
 	 * Start packing more blocks into the cylinder group until
 	 * it cannot grow any larger, the number of cylinder groups
@@ -313,6 +314,7 @@ retry:
 	 * per cylinder group which will have the effect of moving more
 	 * blocks into the last cylinder group.
 	 */
+	printf("freeze 2\n");
 	
 	int optimalfpg = sblock.fs_fpg;
 	int lastminfpg;
@@ -332,6 +334,7 @@ retry:
 		sblock.fs_ipg = roundup(howmany(sblock.fs_fpg, fragsperinode),
 		    INOPB(&sblock));
 	}
+	printf("freeze 3\n");
 	if (optimalfpg != sblock.fs_fpg)
 		printf("Reduced frags per cylinder group from %d to %d %s\n",
 		   optimalfpg, sblock.fs_fpg, "to enlarge last cyl group");
@@ -474,8 +477,8 @@ retry:
 	/*
 	 * Allocate space for two sets of inode blocks.
 	 */
-	long iobufsize = 2 * sblock.fs_bsize;
-	void *iobuf;
+	iobufsize = 2 * sblock.fs_bsize;
+	//void *iobuf;
 	if ((iobuf = calloc(1, iobufsize)) == 0) {
 		printf("Cannot allocate I/O buffer\n");
 		exit(38);
