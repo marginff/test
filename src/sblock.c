@@ -1,5 +1,9 @@
 
 #include <inttypes.h>
+
+
+
+
 /*
  * A write function for use by user-level programs using sbput in libufs.
  */
@@ -282,3 +286,41 @@ wtfs(ufs2_daddr_t bno, int size, char *bf)
 		err(36, "wtfs: %d bytes at sector %jd", size, (intmax_t)bno);
 }
 
+
+ssize_t
+bread(uint64_t blockno, void *data, size_t size)
+{
+	void *p2;
+	ssize_t cnt;
+
+
+
+	BUF_MALLOC(&p2, data, size);
+	if (p2 == NULL) {
+		err(1, "allocate bounce buffer");
+		goto fail;
+	}
+	cnt = pread(d_fd, p2, size, (off_t)(blockno * sectorsize));
+	if (cnt == -1) {
+		err(1, "read error from block device");
+		goto fail;
+	}
+	if (cnt == 0) {
+		err(1, "end of file from block device");
+		goto fail;
+	}
+	if ((size_t)cnt != size) {
+		err(1, "short read or read error from block device");
+		goto fail;
+	}
+	if (p2 != data) {
+		memcpy(data, p2, size);
+		free(p2);
+	}
+	return (cnt);
+fail:	memset(data, 0, size);
+	if (p2 != data) {
+		free(p2);
+	}
+	return (-1);
+}

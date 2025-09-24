@@ -24,6 +24,7 @@
 #include <sys/errno.h>
 #include <time.h>
 //#include <linux/ioctl.h>
+#include <grp.h>
 
 #ifdef __ILP32__
 #define MAXpHYS (128*1024)
@@ -65,6 +66,38 @@
  * MAXVOLLEN defines the length of the buffer allocated.
  */
 #define	MAXVOLLEN 32
+
+#define ROOTLINKCNT 3
+#define UMASK		0755
+
+#define	DIRBLKSIZ	DEV_BSIZE
+#define	UFS_MAXNAMLEN	255
+
+struct	direct {
+	uint32_t d_ino;		/* inode number of entry */
+	uint16_t d_reclen;		/* length of this record */
+	uint8_t  d_type; 		/* file type, see below */
+	uint8_t  d_namlen;		/* length of string in d_name */
+	char	  d_name[UFS_MAXNAMLEN + 1];
+					/* name with length <= UFS_MAXNAMLEN */
+};
+
+#define SNAPLINKCNT 2
+
+#define	DIR_ROUNDUP	4	/* Directory name roundup size */
+#define	DIRECTSIZ(namlen) \
+    (roundup(__offsetof(struct direct, d_name) + (namlen) + 1, DIR_ROUNDUP))
+#if (BYTE_ORDER == LITTLE_ENDIAN)
+#define	DIRSIZ(oldfmt, dp) \
+    ((oldfmt) ? DIRECTSIZ((dp)->d_type) : DIRECTSIZ((dp)->d_namlen))
+#else
+#define	DIRSIZ(oldfmt, dp) \
+    DIRECTSIZ((dp)->d_namlen)
+#endif
+
+
+#define	DT_DIR		 4
+#define	UFS_ROOTINO	((ino_t)2)
 /*
  * MINBSIZE is the smallest allowable block size.
  * In order to insure that it is possible to create files of size

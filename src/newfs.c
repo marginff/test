@@ -514,7 +514,7 @@ retry:
 	 * Now construct the initial file system,
 	 * then write out the super-block.
 	 */
-	//fsinit(utime);
+	fsinit(utime);
 	if (Oflag == 1) {
 		sblock.fs_old_cstotal.cs_ndir = sblock.fs_cstotal.cs_ndir;
 		sblock.fs_old_cstotal.cs_nbfree = sblock.fs_cstotal.cs_nbfree;

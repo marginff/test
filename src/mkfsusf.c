@@ -1,9 +1,9 @@
 #include "crc32.c"
 #include "fs.h"
 #include "mkfsufs.h"
-//#include "fs.h"
 #include "sblock.c"
 #include "cg.c"
+#include "root.c"
 #include "newfs.c"
 
 
@@ -221,8 +221,8 @@ int main(int argc, char *argv[])
     	if (fstat(d_fd, &st) < 0)
 		err(1, "%s", special);
 
-//	#define BLKSSZGET 1
-//	#define BLKGETSIZE64 2
+	#define BLKSSZGET 1
+	#define BLKGETSIZE64 2
 
 	if (sectorsize == 0)
 		if (ioctl(d_fd, BLKSSZGET, &sectorsize) == -1)
