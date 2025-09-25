@@ -23,7 +23,6 @@ void usage()
 	fprintf(stderr, "\t-O file system format: 1 => UFS1, 2 => UFS2\n");
 	fprintf(stderr, "\t-R regression test, suppress random factors\n");
 	fprintf(stderr, "\t-S sector size\n");
-	fprintf(stderr, "\t-T disktype\n");
 	fprintf(stderr, "\t-U enable soft updates\n");
 	fprintf(stderr, "\t-a maximum contiguous blocks\n");
 	fprintf(stderr, "\t-b block size\n");
@@ -49,7 +48,7 @@ void usage()
 
 int main(int argc, char *argv[])
 {
-
+	static char	device[MAXPATHLEN];
 	char *cp, *special;
 	intmax_t reserved;
 	int ch, rval;
@@ -98,7 +97,6 @@ int main(int argc, char *argv[])
 			sectorsize = atoi(optarg);
             break;
 		case 'T':
-			disktype = optarg;
 			break;
 		case 'j':
 			jflag = 1;

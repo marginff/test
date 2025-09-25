@@ -1,3 +1,10 @@
+struct unionacg {
+	struct cg d_cg;
+	char d_buf[MAXBSIZE];
+};
+struct unionacg d_acg;
+#define acg d_acg.d_cg
+
 int cgput(int devfd, struct fs *fs, struct cg *cgp)
 {
 	size_t cnt;

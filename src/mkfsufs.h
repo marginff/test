@@ -10,38 +10,21 @@
 #include <limits.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-//#include <sys/vfs.h>
-#include <sys/param.h>
-#include <sys/mount.h>
-//#include <linux/limits.h>
-#include <sys/param.h>
-#include <fstab.h>  
 #include <sys/ioctl.h>
-//#include <sys/disk.h>
-//#include <linux/fs.h>
-#include <sys/errno.h>
 #include <time.h>
-//#include <linux/ioctl.h>
 #include <grp.h>
 
-// #ifdef __ILP32__
-// #define MAXpHYS (128*1024)
-// #else
-// #define MAXPHYS (1024*1024)
-// #endif
-// #define DEV_BSHIFT 9
-// #define	P_OSREL_CK_CYLGRP		1200046
-// #define	P_OSREL_CK_SUPERBLOCK		1300000
-// #define	P_OSREL_CK_INODE		1300005
 
-//#define MAXBSIZE 65536
-#define BBSIZE			8192
-//#define MAXPATHLEN		4096
-#define AVFILESIZ		16384
-#define AFPDIR			64
-#define	MAXBLKSPERCG	0x7fffffff
+/*
+ * The size of physical and logical block numbers and time fields in UFS.
+ */
+typedef	int32_t	ufs1_daddr_t;
+typedef	int64_t	ufs2_daddr_t;
+typedef int64_t ufs_lbn_t;
+typedef int64_t ufs_time_t;
+
+
 /*
  * MINFREE gives the minimum acceptable percentage of filesystem
  * blocks which may be free. If the freelist drops below this level
@@ -73,14 +56,7 @@
 #define	DIRBLKSIZ	DEV_BSIZE
 #define	UFS_MAXNAMLEN	255
 
-struct	direct {
-	uint32_t d_ino;		/* inode number of entry */
-	uint16_t d_reclen;		/* length of this record */
-	uint8_t  d_type; 		/* file type, see below */
-	uint8_t  d_namlen;		/* length of string in d_name */
-	char	  d_name[UFS_MAXNAMLEN + 1];
-					/* name with length <= UFS_MAXNAMLEN */
-};
+
 
 #define SNAPLINKCNT 2
 
@@ -122,23 +98,7 @@ struct	direct {
 #define	UFS_STDSB	-1	/* Search standard places for superblock */
 #define	MINE_NAME	0x01
 
-#define	IOCPARM_SHIFT	13		/* number of bits for ioctl size */
-//#define	IOCPARM_MASK	((1 << IOCPARM_SHIFT) - 1) /* parameter length mask */
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define	DIOCGSECTORSIZE	_IOR('d', 128, u_int)
-#define	DIOCGMEDIASIZE	_IOR('d', 129, off_t)	/* Get media size in bytes */
-//#define	_IOC(inout,group,num,len)	((unsigned long) \
-//	((inout) | (((len) & IOCPARM_MASK) << 16) | ((group) << 8) | (num)))
-#define MAXPARTITIONS	8 /* XXX should be 20, but see PR276517 */
 
-/*
- * The size of physical and logical block numbers and time fields in UFS.
- */
-typedef	int32_t	ufs1_daddr_t;
-typedef	int64_t	ufs2_daddr_t;
-typedef int64_t ufs_lbn_t;
-typedef int64_t ufs_time_t;
 
 
 /*
@@ -174,6 +134,9 @@ typedef int64_t ufs_time_t;
 #define	NFPI		2
 
 
+#define AVFILESIZ		16384
+#define AFPDIR			64
+#define	MAXBLKSPERCG	0x7fffffff
 int	Eflag;			/* Erase previous disk contents */
 int	Lflag;			/* add a volume label */
 int	Nflag;			/* run without writing file system */
@@ -205,24 +168,20 @@ int	avgfilesperdir = AFPDIR;/* expected number of files per directory */
 char	*volumelabel = NULL;	/* volume label for filesystem */
 //struct uufsd disk;		/* libufs disk structure */
 
-static char	*disktype;
 
-static char	device[MAXPATHLEN];
+
+
 ufs2_daddr_t part_ofs;
 
 int32_t d_fd;
 int d_bsize;
 int d_ufs;
+struct fs sblock;
 
 char *d_name;
 static struct	csum *fscs;
 
-struct unionacg {
-	struct cg d_cg;
-	char d_buf[MAXBSIZE];
-};
-struct unionacg d_acg;
-#define acg d_acg.d_cg
+
 
 char *iobuf;
 static long iobufsize;

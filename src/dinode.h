@@ -225,6 +225,5 @@ union dinodep {
 	struct ufs2_dinode *dp2;
 };
 
-union dinodep d_dp;
 
 #endif /* _UFS_UFS_DINODE_H_ */

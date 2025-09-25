@@ -1,3 +1,12 @@
+struct direct {
+	uint32_t d_ino;		/* inode number of entry */
+	uint16_t d_reclen;		/* length of this record */
+	uint8_t  d_type; 		/* file type, see below */
+	uint8_t  d_namlen;		/* length of string in d_name */
+	char	  d_name[UFS_MAXNAMLEN + 1];
+					/* name with length <= UFS_MAXNAMLEN */
+};
+
 static struct direct root_dir[] = {
 	{ UFS_ROOTINO, sizeof(struct direct), DT_DIR, 1, "." },
 	{ UFS_ROOTINO, sizeof(struct direct), DT_DIR, 2, ".." },
