@@ -152,6 +152,10 @@ iput(union dinode *ip, ino_t ino)
 	fscs[0].cs_nifree--;
 
 
+	if (d_ufs == 2)
+		ffs_update_dinode_ckhash(&sblock, &ip->dp2);
+
+
 	void *inoblock = malloc(sblock.fs_bsize);;
 	bread(fsbtodb(&sblock, ino_to_fsba(&sblock, ino)), inoblock,
 	    sblock.fs_bsize);
@@ -162,8 +166,6 @@ iput(union dinode *ip, ino_t ino)
 		((struct ufs2_dinode *)inoblock)[ino] = ip->dp2;
 
 
-	if (d_ufs == 2)
-		ffs_update_dinode_ckhash(&sblock, &ip->dp2);
 	if (bwrite(fsbtodb(&sblock, ino_to_fsba(&sblock, 0)),
 	    inoblock, sblock.fs_bsize) <= 0)
 		err(1, "iput: bwrite");
