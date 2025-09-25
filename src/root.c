@@ -203,7 +203,7 @@ fsinit(time_t utime)
 		node.dp1.di_size = makedir(root_dir, entries);
 		node.dp1.di_db[0] = alloc(sblock.fs_fsize, node.dp1.di_mode);
 		node.dp1.di_blocks =
-		    fsbtodb(&sblock, fragroundup(&sblock, node.dp1.di_size));
+		    fragroundup(&sblock, node.dp1.di_size)/sectorsize;
 		wtfs(fsbtodb(&sblock, node.dp1.di_db[0]), sblock.fs_fsize,
 		    iobuf);
 		iput(&node, UFS_ROOTINO);
@@ -218,7 +218,7 @@ fsinit(time_t utime)
 				node.dp1.di_db[0] =
 				    alloc(sblock.fs_fsize, node.dp1.di_mode);
 			node.dp1.di_blocks =
-			    fsbtodb(&sblock, fragroundup(&sblock, node.dp1.di_size));
+			    fragroundup(&sblock, node.dp1.di_size)/sectorsize;
 				wtfs(fsbtodb(&sblock, node.dp1.di_db[0]),
 				    sblock.fs_fsize, iobuf);
 			iput(&node, UFS_ROOTINO + 1);
@@ -239,7 +239,8 @@ fsinit(time_t utime)
 		node.dp2.di_size = makedir(root_dir, entries);
 		node.dp2.di_db[0] = alloc(sblock.fs_fsize, node.dp2.di_mode);
 		node.dp2.di_blocks =
-		    fsbtodb(&sblock, fragroundup(&sblock, node.dp2.di_size));
+		    /*fsbtodb*/fragroundup(&sblock, node.dp2.di_size)/sectorsize;
+		printf("di_blocks %i\n", node.dp2.di_blocks);
 		wtfs(fsbtodb(&sblock, node.dp2.di_db[0]), sblock.fs_fsize,
 		    iobuf);
 		iput(&node, UFS_ROOTINO);
@@ -254,7 +255,7 @@ fsinit(time_t utime)
 				node.dp2.di_db[0] =
 				    alloc(sblock.fs_fsize, node.dp2.di_mode);
 			node.dp2.di_blocks =
-			    fsbtodb(&sblock, fragroundup(&sblock, node.dp2.di_size));
+			    fragroundup(&sblock, node.dp2.di_size)/sectorsize;
 				wtfs(fsbtodb(&sblock, node.dp2.di_db[0]), 
 				    sblock.fs_fsize, iobuf);
 			iput(&node, UFS_ROOTINO + 1);
