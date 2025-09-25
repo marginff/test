@@ -84,6 +84,8 @@ struct	direct {
 
 #define SNAPLINKCNT 2
 
+#define	FS_METACKHASH	0x00000200 /* kernel supports metadata check hashes */
+
 #define	DIR_ROUNDUP	4	/* Directory name roundup size */
 #define	DIRECTSIZ(namlen) \
     (roundup(8 + (namlen) + 1, DIR_ROUNDUP))

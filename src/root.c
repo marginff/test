@@ -219,7 +219,8 @@ fsinit(time_t utime)
 				    alloc(sblock.fs_fsize, node.dp1.di_mode);
 			node.dp1.di_blocks =
 			    fragroundup(&sblock, node.dp1.di_size)/sectorsize;
-				wtfs(fsbtodb(&sblock, node.dp1.di_db[0]),
+			node.dp2.di_dirdepth = 1;
+			wtfs(fsbtodb(&sblock, node.dp1.di_db[0]),
 				    sblock.fs_fsize, iobuf);
 			iput(&node, UFS_ROOTINO + 1);
 		}
@@ -256,7 +257,8 @@ fsinit(time_t utime)
 				    alloc(sblock.fs_fsize, node.dp2.di_mode);
 			node.dp2.di_blocks =
 			    fragroundup(&sblock, node.dp2.di_size)/sectorsize;
-				wtfs(fsbtodb(&sblock, node.dp2.di_db[0]), 
+			node.dp2.di_dirdepth = 1;
+			wtfs(fsbtodb(&sblock, node.dp2.di_db[0]), 
 				    sblock.fs_fsize, iobuf);
 			iput(&node, UFS_ROOTINO + 1);
 		}
