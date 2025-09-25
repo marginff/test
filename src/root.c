@@ -113,12 +113,30 @@ goth:
 }
 
 /*
+ * Update an inode check-hash.
+ */
+void
+ffs_update_dinode_ckhash(struct fs *fs, struct ufs2_dinode *dip)
+{
+
+	if (dip->di_mode == 0 || (fs->fs_metackhash & CK_INODE) == 0)
+		return;
+	/*
+	 * Exclude old di_ckhash from the crc32 calculation, e.g., always use
+	 * a check-hash value of zero when calculating the new check-hash.
+	 */
+	dip->di_ckhash = 0;
+	dip->di_ckhash = calculate_crc32c(~0L, (void *)dip, sizeof(*dip));
+}
+
+
+/*
  * Allocate an inode on the disk
  */
 void
 iput(union dinode *ip, ino_t ino)
 {
-	ufs2_daddr_t d;
+	union dinodep dp;
 
 	bread(part_ofs + fsbtodb(&sblock, cgtod(&sblock, 0)), (char *)&acg,
 	    sblock.fs_cgsize);
@@ -128,24 +146,27 @@ iput(union dinode *ip, ino_t ino)
 	}
 	acg.cg_cs.cs_nifree--;
 	setbit(cg_inosused(&acg), ino);
-	wtfs(fsbtodb(&sblock, cgtod(&sblock, 0)), sblock.fs_cgsize,
-	    (char *)&acg);
+	if (cgwrite() != 0)
+		err(1, "iput: cgwrite: %s");
 	sblock.fs_cstotal.cs_nifree--;
 	fscs[0].cs_nifree--;
-	if (ino >= (unsigned long)sblock.fs_ipg * sblock.fs_ncg) {
-		printf("fsinit: inode value out of range (%ju).\n",
-		    (uintmax_t)ino);
-		exit(32);
-	}
-	d = fsbtodb(&sblock, ino_to_fsba(&sblock, ino));
-	bread(part_ofs + d, (char *)iobuf, sblock.fs_bsize);
+
+
+	void *inoblock = malloc(sblock.fs_bsize);;
+	bread(fsbtodb(&sblock, ino_to_fsba(&sblock, ino)), inoblock,
+	    sblock.fs_bsize);
+
 	if (sblock.fs_magic == FS_UFS1_MAGIC)
-		((struct ufs1_dinode *)iobuf)[ino_to_fsbo(&sblock, ino)] =
-		    ip->dp1;
+		((struct ufs1_dinode *)inoblock)[ino] = ip->dp1;
 	else
-		((struct ufs2_dinode *)iobuf)[ino_to_fsbo(&sblock, ino)] =
-		    ip->dp2;
-	wtfs(d, sblock.fs_bsize, (char *)iobuf);
+		((struct ufs2_dinode *)inoblock)[ino] = ip->dp2;
+
+
+	if (d_ufs == 2)
+		ffs_update_dinode_ckhash(&sblock, &ip->dp2);
+	if (bwrite(fsbtodb(&sblock, ino_to_fsba(&sblock, 0)),
+	    inoblock, sblock.fs_bsize) <= 0)
+		err(1, "iput: bwrite");
 }
 
 

@@ -38,6 +38,14 @@ charsperline(void)
 
 void mkfs(char *fsys) {
 
+	time_t utime;
+
+	d_bsize = sectorsize;
+	d_ufs = Oflag;
+	if (Rflag)
+		utime = 1000000000;
+	else
+		time(&utime);
 
    	if ((sblock.fs_si = (struct fs_summary_info *)malloc(sizeof(struct fs_summary_info))) == NULL) {
 		printf("Superblock summary info allocation failed.\n");
@@ -380,7 +388,6 @@ retry:
 	sblock.fs_ronly = 0;
 	sblock.fs_state = 0;
 	sblock.fs_clean = 1;
-	time_t utime;
 	sblock.fs_id[0] = (long)utime;
 	sblock.fs_id[1] = newfs_random();
 	sblock.fs_fsmnt[0] = '\0';

@@ -209,7 +209,8 @@ static char	device[MAXPATHLEN];
 ufs2_daddr_t part_ofs;
 
 int32_t d_fd;
-
+int d_bsize;
+int d_ufs;
 
 char *d_name;
 static struct	csum *fscs;
