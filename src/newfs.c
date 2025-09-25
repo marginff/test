@@ -461,7 +461,7 @@ retry:
 	sblock.fs_csp = fscs;
 	printf("1\n");
 	if (!Nflag && sbwrite(0) != 0)
-		err(1, "sbwrite: %s");
+		err(1, "sbwrite: ");
 	printf("2\n");
 	if (Xflag == 1) {
 		printf("** Exiting on Xflag 1\n");
@@ -533,7 +533,7 @@ retry:
 		exit(0);
 	}
 	if (sbwrite(0) != 0)
-		err(1, "sbwrite: %s");
+		err(1, "sbwrite: ");
 	
 	/*
 	 * For UFS1 filesystems with a blocksize of 64K, the first

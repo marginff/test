@@ -26,17 +26,17 @@
 //#include <linux/ioctl.h>
 #include <grp.h>
 
-#ifdef __ILP32__
-#define MAXpHYS (128*1024)
-#else
-#define MAXPHYS (1024*1024)
-#endif
-#define DEV_BSHIFT 9
-#define	P_OSREL_CK_CYLGRP		1200046
-#define	P_OSREL_CK_SUPERBLOCK		1300000
-#define	P_OSREL_CK_INODE		1300005
+// #ifdef __ILP32__
+// #define MAXpHYS (128*1024)
+// #else
+// #define MAXPHYS (1024*1024)
+// #endif
+// #define DEV_BSHIFT 9
+// #define	P_OSREL_CK_CYLGRP		1200046
+// #define	P_OSREL_CK_SUPERBLOCK		1300000
+// #define	P_OSREL_CK_INODE		1300005
 
-#define MAXBSIZE 65536
+//#define MAXBSIZE 65536
 #define BBSIZE			8192
 //#define MAXPATHLEN		4096
 #define AVFILESIZ		16384
@@ -204,6 +204,8 @@ int	avgfilesize = AVFILESIZ;/* expected average file size */
 int	avgfilesperdir = AFPDIR;/* expected number of files per directory */
 char	*volumelabel = NULL;	/* volume label for filesystem */
 //struct uufsd disk;		/* libufs disk structure */
+
+static char	*disktype;
 
 static char	device[MAXPATHLEN];
 ufs2_daddr_t part_ofs;

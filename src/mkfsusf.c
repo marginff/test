@@ -12,7 +12,7 @@ void usage()
 {
 	fprintf(stderr,
 	    "usage: %s [ -fsoptions ] special-device%s\n",
-	    //getprogname(),
+	    getprogname(),
 	    " [device-type]");
 	fprintf(stderr, "where fsoptions are:\n");
 	fprintf(stderr, "\t-E Erase previous disk content\n");
@@ -49,21 +49,18 @@ void usage()
 
 int main(int argc, char *argv[])
 {
-	struct partition *pp;
-	struct disklabel *lp;
-	struct stat st;
+
 	char *cp, *special;
 	intmax_t reserved;
 	int ch, rval;
 	size_t i;
 	char part_name;		/* partition name, default to full disk */
 
-	part_name = 'c';
-	reserved = 0;
 
-    	while ((ch = getopt(argc, argv,
+
+    while ((ch = getopt(argc, argv,
 	    "EJL:NO:RS:T:UXa:b:c:d:e:f:g:h:i:jk:lm:no:p:r:s:t")) != -1)
-		switch (ch) {
+	switch (ch) {
 		case 'E':
 			Eflag = 1;
 			break;
@@ -101,7 +98,7 @@ int main(int argc, char *argv[])
 			sectorsize = atoi(optarg);
             break;
 		case 'T':
-			//disktype = optarg;
+			disktype = optarg;
 			break;
 		case 'j':
 			jflag = 1;
@@ -171,8 +168,7 @@ int main(int argc, char *argv[])
 			else if (strcmp(optarg, "time") == 0)
 				opt = FS_OPTTIME;
 			else
-				errx(1, 
-		"%s: unknown optimization preference: use `space' or `time'",
+				errx(1, "%s: unknown optimization preference: use `space' or `time'",
 				    optarg);
 			break;
 		case 'r':
@@ -214,31 +210,34 @@ int main(int argc, char *argv[])
 
 
 	d_name = special;
+
 	d_fd = open(special, O_RDWR);
 	if (d_fd < 0 && !Nflag)
 		errx(1, "%s: ", special);
 
-    	if (fstat(d_fd, &st) < 0)
-		err(1, "%s", special);
 
-//	#define BLKSSZGET 1
-//	#define BLKGETSIZE64 2
+	#define BLKSSZGET 1
+	#define BLKGETSIZE64 2
 
 	if (sectorsize == 0)
 		if (ioctl(d_fd, BLKSSZGET, &sectorsize) == -1)
-			//if (ioctl(d_fd, DIOCGSECTORSIZE,&sectorsize) == -1) 
 		    	err(1, "can't get sector size");	
 	   
 	if (mediasize == 0)
 		if(ioctl(d_fd, BLKGETSIZE64, &mediasize) == -1)
 			err(1, "can't get media size");
 
-	fssize = mediasize / sectorsize;
+	fssize = mediasize / sectorsize - reserved;
 	if (fsize <= 0)
 		fsize = MAX(DFL_FRAGSIZE, sectorsize);
 	if (bsize <= 0)
 		bsize = MIN(DFL_BLKSIZE, 8 * fsize);
-	printf("123");
+	
+	/* Use soft updates by default for UFS2 and above */
+	if (Oflag > 1)
+		Uflag = 1;
+	realsectorsize = sectorsize;
+
 	mkfs(d_name);
 
 	close(d_fd);

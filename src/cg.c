@@ -30,7 +30,7 @@ cgwrite()
 			return (0);
 	
 		if (failmsg != NULL) {
-			err(1, failmsg);
+			err(1, "%s",failmsg);
 			return (-1);
 		}
 		// if (errno == 5) err(1, strerror(errno));
@@ -223,7 +223,7 @@ initcg(int cylno, time_t utime)
 	 */
 	savedactualloc = sblock.fs_sblockactualloc;
 	sblock.fs_sblockactualloc =
-	    dbtob(fsbtodb(&sblock, cgsblock(&sblock, cylno)));
+	    (fsbtodb(&sblock, cgsblock(&sblock, cylno))) /sectorsize;
 	printf("inicg 4\n");
 	if (sbwrite(0) != 0)
 		err(1, "sbwrite:");
@@ -231,7 +231,6 @@ initcg(int cylno, time_t utime)
 	printf("inicg 2\n");
 	if (cgwrite() != 0)
 		err(1, "initcg: cgwrite:");
-	printf("initcg 3 %i %i\n", sizeof(struct ufs2_dinode), iobufsize);
 	start = 0;
 	dp1 = (struct ufs1_dinode *)(&iobuf[start]);
 	dp2 = (struct ufs2_dinode *)(&iobuf[start]);

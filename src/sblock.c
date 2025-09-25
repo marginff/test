@@ -12,7 +12,6 @@ use_pwrite(void *devfd, uint64_t loc, void *buf, int size)
 {
 	int fd;
 
-	printf("sbloc: %i", loc);
 	fd = *(int *)devfd;
 	if (pwrite(fd, buf, size, loc) != size)
 		return (EIO);
@@ -36,7 +35,7 @@ ffs_oldfscompat_write(struct fs *fs)
 		if (fs->fs_sblockloc != SBLOCK_UFS1 &&
 		    (fs->fs_old_flags & FS_FLAGS_UPDATED) == 0) {
 			printf(
-			"WARNING: %s: correcting fs_sblockloc from %jd to %d\n",
+			"WARNING: %s: correcting fs_sblockloc from %lli to %d\n",
 			    fs->fs_fsmnt, fs->fs_sblockloc, SBLOCK_UFS1);
 			fs->fs_sblockloc = SBLOCK_UFS1;
 		}
@@ -55,7 +54,7 @@ ffs_oldfscompat_write(struct fs *fs)
 		if (fs->fs_sblockloc != SBLOCK_UFS2 &&
 		    (fs->fs_old_flags & FS_FLAGS_UPDATED) == 0) {
 			printf(
-			"WARNING: %s: correcting fs_sblockloc from %jd to %d\n",
+			"WARNING: %s: correcting fs_sblockloc from %lli to %d\n",
 			    fs->fs_fsmnt, fs->fs_sblockloc, SBLOCK_UFS2);
 			fs->fs_sblockloc = SBLOCK_UFS2;
 		}
@@ -187,7 +186,6 @@ sbput(int devfd, struct fs *fs, int numaltwrite)
 	printf("12\n");
 	int b = fs->fs_sblockactualloc;
 	printf("13\n");
-	printf("11 %i %i\n", a, b);
 	error = ffs_sbput(&devfd, fs, fs->fs_sblockactualloc);
 	printf("4\n");
 	fflush(NULL); /* flush any messages */
@@ -199,7 +197,7 @@ sbput(int devfd, struct fs *fs, int numaltwrite)
 		fs->fs_csp = NULL;
 	}
 	for (i = 0; i < numaltwrite; i++) {
-		fs->fs_sblockactualloc = dbtob(fsbtodb(fs, cgsblock(fs, i)));
+		fs->fs_sblockactualloc = (fsbtodb(fs, cgsblock(fs, i)))/sectorsize;
 		if ((error = ffs_sbput(&devfd, fs, fs->fs_sblockactualloc
 		     )) != 0) {
 			fflush(NULL); /* flush any messages */
@@ -248,7 +246,6 @@ bwrite(ufs2_daddr_t blockno, const void *data, size_t size)
 	int rv;
 	void *p2;
 
-	printf("bwrite: %i\n", blockno * bsize);
 
 	BUF_MALLOC(&p2, data, size);
 	if (p2 == NULL) {
@@ -278,7 +275,6 @@ bwrite(ufs2_daddr_t blockno, const void *data, size_t size)
 static void
 wtfs(ufs2_daddr_t bno, int size, char *bf)
 {
-	printf("WTFS %i %i %i\n", bno, size, part_ofs);
 	if (Nflag) printf("NFLAG\n");
 	if (Nflag)
 		return;
