@@ -33,22 +33,24 @@ cgwrite()
 	static char errmsg[BUFSIZ];
 
 		
-		if (cgput(d_fd, &sblock, &acg) == 0)
-			return (0);
-	
-		if (failmsg != NULL) {
-			err(1, "%s",failmsg);
-			return (-1);
-		}
-		// if (errno == 5) err(1, strerror(errno));
-		// case EIO:
-			err(1, "unable to write cylinder group");
-		// 	break;
-		// default:
-			
-		// 	break;
-		// }
+	if (cgput(d_fd, &sblock, &acg) == 0)
+		return (0);
+	d_err = NULL;
+
+	if (failmsg != NULL) {
+		d_err = failmsg;
 		return (-1);
+	}
+
+	switch(errno){
+		case EIO: 
+			d_err = "unable to write cylinder group";
+			break;
+		default:
+			d_err = strerror(errno);
+	}
+
+	return (-1);
 
 }
 
@@ -86,7 +88,7 @@ setblock(struct fs *fs, unsigned char *cp, int h)
 void
 initcg(int cylno, time_t utime)
 {
-	printf("initcg 1\n");
+
 	long blkno, start;
 	off_t savedactualloc;
 	uint i, j, d, dlower, dupper;
@@ -109,9 +111,7 @@ initcg(int cylno, time_t utime)
 	if (cylno == 0)
 		dupper += howmany(sblock.fs_cssize, sblock.fs_fsize);
 	cs = &fscs[cylno];
-	printf("initcg 6\n");
 	memset(&acg, 0, sblock.fs_cgsize);
-	printf("initgc 7\n");
 	acg.cg_time = utime;
 	acg.cg_magic = CG_MAGIC;
 	acg.cg_cgx = cylno;
@@ -136,7 +136,6 @@ initcg(int cylno, time_t utime)
 		acg.cg_iusedoff = acg.cg_old_boff +
 		    sblock.fs_old_cpg * sizeof(u_int16_t);
 	}
-	printf("initcg 5\n");
 	acg.cg_freeoff = acg.cg_iusedoff + howmany(sblock.fs_ipg, CHAR_BIT);
 	acg.cg_nextfreeoff = acg.cg_freeoff + howmany(sblock.fs_fpg, CHAR_BIT);
 	if (sblock.fs_contigsumsize > 0) {
@@ -231,18 +230,17 @@ initcg(int cylno, time_t utime)
 	savedactualloc = sblock.fs_sblockactualloc;
 	sblock.fs_sblockactualloc =
 	    (fsbtodb(&sblock, cgsblock(&sblock, cylno))) /sectorsize;
-	printf("inicg 4\n");
+
 	if (sbwrite(0) != 0)
 		err(1, "sbwrite:");
 	sblock.fs_sblockactualloc = savedactualloc;
-	printf("inicg 2\n");
+
 	if (cgwrite() != 0)
-		err(1, "initcg: cgwrite:");
+		err(1, "initcg: cgwrite: %s", d_err);
 	start = 0;
 	dp1 = (struct ufs1_dinode *)(&iobuf[start]);
 	dp2 = (struct ufs2_dinode *)(&iobuf[start]);
 	for (i = 0; i < acg.cg_initediblk; i++) {
-		//printf("initcg 10\n");
 		if (sblock.fs_magic == FS_UFS1_MAGIC) {
 			dp1->di_gen = newfs_random();
 			dp1++;
@@ -251,9 +249,7 @@ initcg(int cylno, time_t utime)
 			dp2++;
 		}
 	}
-	printf("initcg 8 %i %i\n", INOPB(&sblock), INOPF(&sblock));
 	wtfs(fsbtodb(&sblock, cgimin(&sblock, cylno)), iobufsize, iobuf);
-	printf("initcg 9\n");
 	/*
 	 * For the old file system, we have to initialize all the inodes.
 	 */
@@ -270,5 +266,4 @@ initcg(int cylno, time_t utime)
 			    sblock.fs_bsize, &iobuf[start]);
 		}
 	}
-	printf("initcg final\n");
 }

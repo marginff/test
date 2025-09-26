@@ -111,7 +111,7 @@ ffs_calc_sbhash(struct fs *fs)
 int
 ffs_sbput(void *devfd, struct fs *fs, uint64_t loc)
 {
-	printf("10\n");
+
 	struct fs_summary_info *fs_si;
 	int i, error, blks, size;
 	uint8_t *space;
@@ -121,24 +121,24 @@ ffs_sbput(void *devfd, struct fs *fs, uint64_t loc)
 	 * is an error, the superblock will not be marked as clean.
 	 */
 	if (fs->fs_si != NULL && fs->fs_csp != NULL) {
-		printf("8\n");
+
 		blks = howmany(fs->fs_cssize, fs->fs_fsize);
 		space = (uint8_t *)fs->fs_csp;
 		for (i = 0; i < blks; i += fs->fs_frag) {
-			printf("9\n");
+
 			size = fs->fs_bsize;
 			if (i + fs->fs_frag > blks)
 				size = (blks - i) * fs->fs_fsize;
-			printf("5\n");
+
 			if ((error = use_pwrite(devfd,
-			     (uint64_t)(fsbtodb(fs, fs->fs_csaddr + i) << 9),
+			     (fsbtodb(fs, fs->fs_csaddr + i))/sectorsize
 			     space, size)) != 0)
 				return (error);
-			printf("6\n");
+
 			space += size;
 		}
 	}
-	printf("7\n");
+
 	fs->fs_fmod = 0;
 	ffs_oldfscompat_write(fs);
 #ifdef _KERNEL
@@ -177,17 +177,13 @@ ffs_sbput(void *devfd, struct fs *fs, uint64_t loc)
 int
 sbput(int devfd, struct fs *fs, int numaltwrite)
 {
-	printf("3\n");
 	struct csum *savedcsp;
 	uint64_t savedactualloc;
 	int i, error;
 
-	int *a = &devfd;
-	printf("12\n");
-	int b = fs->fs_sblockactualloc;
-	printf("13\n");
+
 	error = ffs_sbput(&devfd, fs, fs->fs_sblockactualloc);
-	printf("4\n");
+
 	fflush(NULL); /* flush any messages */
 	if (error != 0 || numaltwrite == 0)
 		return (error);
@@ -220,16 +216,16 @@ sbwrite(int all)
 	
 	int rv;
 
-	//ERROR(disk, NULL);
+	d_err = NULL;
 
 
 	if ((errno = sbput(d_fd, &sblock, all ? sblock.fs_ncg : 0)) != 0) {
 		switch (errno) {
 		case EIO:
-			err(1, "failed to write superblock");
+			d_err = "failed to write superblock";
 			break;
 		default:
-			err(1, "unknown superblock write error");
+			d_err = "unknown superblock write error";
 			errno = EIO;
 			break;
 		}
@@ -246,10 +242,12 @@ bwrite(ufs2_daddr_t blockno, const void *data, size_t size)
 	int rv;
 	void *p2;
 
+	d_err = NULL;
+
 
 	BUF_MALLOC(&p2, data, size);
 	if (p2 == NULL) {
-		err(1, "allocate bounce buffer");
+		d_err = "allocate bounce buffer";
 		return (-1);
 	}
 	if (p2 != data)
@@ -258,11 +256,11 @@ bwrite(ufs2_daddr_t blockno, const void *data, size_t size)
 	if (p2 != data)
 		free(p2);
 	if (cnt == -1) {
-		err(1, "write error to block device");
+		d_err = "write error to block device";
 		return (-1);
 	}
 	if ((size_t)cnt != size) {
-		err(1, "short write to block device");
+		d_err = "short write to block device";
 		return (-1);
 	}
 	return (cnt);
@@ -275,7 +273,6 @@ bwrite(ufs2_daddr_t blockno, const void *data, size_t size)
 static void
 wtfs(ufs2_daddr_t bno, int size, char *bf)
 {
-	if (Nflag) printf("NFLAG\n");
 	if (Nflag)
 		return;
 	if (bwrite(part_ofs + bno, bf, size) < 0)
@@ -293,20 +290,20 @@ bread(uint64_t blockno, void *data, size_t size)
 
 	BUF_MALLOC(&p2, data, size);
 	if (p2 == NULL) {
-		err(1, "allocate bounce buffer");
+		d_err = "allocate bounce buffer";
 		goto fail;
 	}
 	cnt = pread(d_fd, p2, size, (off_t)(blockno * sectorsize));
 	if (cnt == -1) {
-		err(1, "read error from block device");
+		d_err = "read error from block device";
 		goto fail;
 	}
 	if (cnt == 0) {
-		err(1, "end of file from block device");
+		d_err = "end of file from block device";
 		goto fail;
 	}
 	if ((size_t)cnt != size) {
-		err(1, "short read or read error from block device");
+		d_err = "short read or read error from block device";
 		goto fail;
 	}
 	if (p2 != data) {

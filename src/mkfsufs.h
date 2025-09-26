@@ -188,7 +188,7 @@ struct fs sblock;
 
 char *d_name;
 static struct	csum *fscs;
-
+char * d_error;
 
 
 char *iobuf;

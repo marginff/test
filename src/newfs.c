@@ -1,7 +1,6 @@
 #include "fs.h"
 
 #define POWEROF2(num)	(((num) & ((num) - 1)) == 0)
-//#include <inttypes.h>
 typedef unsigned int    u_int;
 #define CGSIZEFUDGE 8
 
@@ -72,7 +71,7 @@ void mkfs(char *fsys) {
 		printf("preposterous size %jd\n", (intmax_t)fssize);
 		exit(13);
 	}
-	printf("!11\n");
+
     wtfs(fssize - (realsectorsize / DEV_BSIZE), realsectorsize,
 		(char *)&sblock);
 	/*
@@ -146,6 +145,13 @@ restart:
 		sblock.fs_maxbsize = maxbsize;
 	}
 
+	/*
+   * Maxcontig sets the default for the maximum number of blocks
+   * that may be allocated sequentially. With file system clustering
+   * it is possible to allocate contiguous blocks up to the maximum
+   * transfer size permitted by the controller or buffering.
+   */
+
 	if (maxcontig == 0)
 		maxcontig = MAX(1, MAXPHYS / bsize);
 	sblock.fs_maxcontig = maxcontig;
@@ -172,7 +178,10 @@ restart:
 	sblock.fs_size = fssize = dbtofsb(&sblock, fssize);
 	sblock.fs_providersize = dbtofsb(&sblock, mediasize / sectorsize);
 
-
+/*
+   * Before the filesystem is finally initialized, mark it
+   * as incompletely initialized.
+   */
 	sblock.fs_magic = FS_BAD_MAGIC;
 
 	if (Oflag == 1) {
@@ -322,7 +331,6 @@ retry:
 	 * per cylinder group which will have the effect of moving more
 	 * blocks into the last cylinder group.
 	 */
-	printf("freeze 2\n");
 	
 	int optimalfpg = sblock.fs_fpg;
 	int lastminfpg;
@@ -342,7 +350,6 @@ retry:
 		sblock.fs_ipg = roundup(howmany(sblock.fs_fpg, fragsperinode),
 		    INOPB(&sblock));
 	}
-	printf("freeze 3\n");
 	if (optimalfpg != sblock.fs_fpg)
 		printf("Reduced frags per cylinder group from %d to %d %s\n",
 		   optimalfpg, sblock.fs_fpg, "to enlarge last cyl group");
@@ -459,10 +466,8 @@ retry:
 	 * Reference the summary information so it will also be written.
 	 */
 	sblock.fs_csp = fscs;
-	printf("1\n");
 	if (!Nflag && sbwrite(0) != 0)
-		err(1, "sbwrite: ");
-	printf("2\n");
+		err(1, "sbwrite: %s", d_error);
 	if (Xflag == 1) {
 		printf("** Exiting on Xflag 1\n");
 		exit(0);
@@ -485,7 +490,6 @@ retry:
 	 * Allocate space for two sets of inode blocks.
 	 */
 	iobufsize = 2 * sblock.fs_bsize;
-	//void *iobuf;
 	if ((iobuf = calloc(1, iobufsize)) == 0) {
 		printf("Cannot allocate I/O buffer\n");
 		exit(38);
@@ -533,7 +537,7 @@ retry:
 		exit(0);
 	}
 	if (sbwrite(0) != 0)
-		err(1, "sbwrite: ");
+		err(1, "sbwrite: %s", d_error);
 	
 	/*
 	 * For UFS1 filesystems with a blocksize of 64K, the first

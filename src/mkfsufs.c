@@ -15,7 +15,6 @@ void usage(char *name)
 	    name,
 	    " [device-type]");
 	fprintf(stderr, "where fsoptions are:\n");
-	fprintf(stderr, "\t-E Erase previous disk content\n");
 	fprintf(stderr, "\t-J Enable journaling via gjournal\n");
 	fprintf(stderr, "\t-L volume label to add to superblock\n");
 	fprintf(stderr,
@@ -211,7 +210,7 @@ int main(int argc, char *argv[])
 
 	d_fd = open(special, O_RDWR);
 	if (d_fd < 0 && !Nflag)
-		errx(1, "%s: ", special);
+		errx(1, "failed to open disk for writing %s: ", special);
 
 
 	#define BLKSSZGET 1
