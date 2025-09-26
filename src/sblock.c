@@ -131,7 +131,7 @@ ffs_sbput(void *devfd, struct fs *fs, uint64_t loc)
 				size = (blks - i) * fs->fs_fsize;
 
 			if ((error = use_pwrite(devfd,
-			     (fsbtodb(fs, fs->fs_csaddr + i))/sectorsize
+			     (fsbtodb(fs, fs->fs_csaddr + i))/sectorsize,
 			     space, size)) != 0)
 				return (error);
 
