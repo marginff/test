@@ -263,7 +263,6 @@ initcg(int cylno, time_t utime)
 		     i += sblock.fs_frag) {
 			dp1 = (struct ufs1_dinode *)(&iobuf[start]);
 			for (j = 0; j < INOPB(&sblock); j++) {
-				printf("initcf final -1\n");
 				dp1->di_gen = newfs_random();
 				dp1++;
 			}
