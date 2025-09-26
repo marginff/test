@@ -86,7 +86,7 @@ typedef int64_t ufs_time_t;
  * and that both SBLOCKSIZE and MAXBSIZE must be >= MINBSIZE.
  */
 #define	MINBSIZE 	4096
-//#define MAXBSIZE 	65536
+#define MAXBSIZE 	65536
 #define _PATH_DEV 	"/dev/"
 #define	FSMAXSNAP 	20
 #define	NOCSPTRS	((128 / sizeof(void *)) - 1)
@@ -110,6 +110,14 @@ typedef int64_t ufs_time_t;
  */
 #define	DFL_FRAGSIZE	4096
 #define	DFL_BLKSIZE	32768
+
+#ifndef MAXPHYS
+#ifdef __ILP32__
+#define MAXPHYS		(128 * 1024)
+#else
+#define MAXPHYS		(1024 * 1024)
+#endif
+#endif
 
 /*
  * Cylinder groups may have up to MAXBLKSPERCG blocks. The actual

@@ -8,11 +8,11 @@
 
 
 
-void usage()
+void usage(char *name)
 {
 	fprintf(stderr,
 	    "usage: %s [ -fsoptions ] special-device%s\n",
-	    getprogname(),
+	    name,
 	    " [device-type]");
 	fprintf(stderr, "where fsoptions are:\n");
 	fprintf(stderr, "\t-E Erase previous disk content\n");
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	int ch, rval;
 	size_t i;
 	char part_name;		/* partition name, default to full disk */
-
+	char *prog_name = argv[0];
 
 
     while ((ch = getopt(argc, argv,
@@ -185,14 +185,14 @@ int main(int argc, char *argv[])
 			break;
 		case '?':
 		default:
-			usage();
+			usage(prog_name);
 	}
 
 	argc -= optind;
 	argv += optind;
 
 	if (argc != 1)
-		usage();
+		usage(prog_name);
 
 	special = argv[0];
 	if (!special[0])
