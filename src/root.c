@@ -117,7 +117,7 @@ goth:
 			setbit(cg_blksfree(&acg), d + i);
 	}
 	if (cgwrite() != 0)
-		err(1, "alloc: cgwrite: ");
+		err(1, "alloc: cgwrite: %s", d_err);
 	return ((ufs2_daddr_t)d);
 }
 
@@ -156,7 +156,7 @@ iput(union dinode *ip, ino_t ino)
 	acg.cg_cs.cs_nifree--;
 	setbit(cg_inosused(&acg), ino);
 	if (cgwrite() != 0)
-		err(1, "iput: cgwrite: ");
+		err(1, "iput: cgwrite: %s", d_err);
 	sblock.fs_cstotal.cs_nifree--;
 	fscs[0].cs_nifree--;
 
@@ -273,7 +273,7 @@ fsinit(time_t utime)
 		node.dp2.di_db[0] = alloc(sblock.fs_fsize, node.dp2.di_mode);
 		node.dp2.di_blocks =
 		    /*fsbtodb*/fragroundup(&sblock, node.dp2.di_size)/sectorsize;
-		printf("di_blocks %llu\n", node.dp2.di_blocks);
+		
 		wtfs(fsbtodb(&sblock, node.dp2.di_db[0]), sblock.fs_fsize,
 		    iobuf);
 		iput(&node, UFS_ROOTINO);

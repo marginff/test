@@ -265,7 +265,7 @@ retry:
 		    origdensity, density);
 	}
 	origdensity = density;
-	printf("freeze 0\n");
+
 	for (;;) {
 		fragsperinode = MAX(numfrags(&sblock, density), 1);
 		if (fragsperinode < minfragsperinode) {
@@ -298,7 +298,7 @@ retry:
 	}
 	if (density != origdensity)
 		printf("density reduced from %d to %d\n", origdensity, density);
-	printf("freeze 1\n");
+
 	/*
 	 * Start packing more blocks into the cylinder group until
 	 * it cannot grow any larger, the number of cylinder groups
