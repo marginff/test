@@ -649,8 +649,7 @@ struct cg {
 #define	dbtofsb(fs, b)	((b) >> (fs)->fs_fsbtodb)
 
 
-// #define dbtob(db)			/* calculates (db * DEV_BSIZE) */ \
-// 	((off_t)(db) << DEV_BSHIFT)
+
 
 
 /*

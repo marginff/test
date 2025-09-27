@@ -61,7 +61,7 @@ ffs_oldfscompat_write(struct fs *fs)
 		if (fs->fs_sblockloc != SBLOCK_UFS1 &&
 		    (fs->fs_old_flags & FS_FLAGS_UPDATED) == 0) {
 			printf(
-			"WARNING: %s: correcting fs_sblockloc from %lli to %d\n",
+			"WARNING: %s: correcting fs_sblockloc from %li to %d\n",
 			    fs->fs_fsmnt, fs->fs_sblockloc, SBLOCK_UFS1);
 			fs->fs_sblockloc = SBLOCK_UFS1;
 		}
@@ -80,7 +80,7 @@ ffs_oldfscompat_write(struct fs *fs)
 		if (fs->fs_sblockloc != SBLOCK_UFS2 &&
 		    (fs->fs_old_flags & FS_FLAGS_UPDATED) == 0) {
 			printf(
-			"WARNING: %s: correcting fs_sblockloc from %lli to %d\n",
+			"WARNING: %s: correcting fs_sblockloc from %li to %d\n",
 			    fs->fs_fsmnt, fs->fs_sblockloc, SBLOCK_UFS2);
 			fs->fs_sblockloc = SBLOCK_UFS2;
 		}
@@ -239,9 +239,6 @@ sbput(int devfd, struct fs *fs, int numaltwrite)
 int
 sbwrite(int all)
 {
-	
-	int rv;
-
 	d_err = NULL;
 
 
@@ -265,7 +262,6 @@ ssize_t
 bwrite(ufs2_daddr_t blockno, const void *data, size_t size)
 {
 	ssize_t cnt;
-	int rv;
 	void *p2;
 
 	d_err = NULL;

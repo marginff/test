@@ -58,8 +58,6 @@ int cgput(int devfd, struct fs *fs, struct cg *cgp)
 int
 cgwrite()
 {
-    
-	static char errmsg[BUFSIZ];
 
 		
 	if (cgput(d_fd, &sblock, &acg) == 0)

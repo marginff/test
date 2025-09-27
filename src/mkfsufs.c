@@ -78,7 +78,6 @@ void usage(char *name)
 	fprintf(stderr, "\t-n do not create .snap directory\n");
 	fprintf(stderr, "\t-m minimum free space %%\n");
 	fprintf(stderr, "\t-o optimization preference (`space' or `time')\n");
-	fprintf(stderr, "\t-p partition name (a..h)\n");
 	fprintf(stderr, "\t-r reserved sectors at the end of device\n");
 	fprintf(stderr, "\t-s file system size (sectors)\n");
 	fprintf(stderr, "\t-t enable TRIM\n");
@@ -90,14 +89,13 @@ int main(int argc, char *argv[])
 	static char	device[MAXPATHLEN];
 	char *cp, *special;
 	intmax_t reserved;
-	int ch, rval;
+	int ch;
 	size_t i;
-	char part_name;		/* partition name, default to full disk */
 	char *prog_name = argv[0];
 
 
     while ((ch = getopt(argc, argv,
-	    "EJL:NO:RS:T:UXa:b:c:d:e:f:g:h:i:jk:lm:no:p:r:s:t")) != -1)
+	    "EJL:NO:RS:T:UXa:b:c:d:e:f:g:h:i:jk:lm:no:p:r:s:t")) != -1) {
 	switch (ch) {
 		case 'E':
 			Eflag = 1;
@@ -134,7 +132,7 @@ int main(int argc, char *argv[])
 			break;
 		case 'S':
 			sectorsize = atoi(optarg);
-            break;
+           		break;
 		case 'T':
 			break;
 		case 'j':
@@ -212,8 +210,6 @@ int main(int argc, char *argv[])
 			reserved = atoi(optarg);
 			break;
 		case 'p':
-			//is_file = 1;
-			part_name = optarg[0];
 			break;
 
 		case 's':
@@ -225,6 +221,7 @@ int main(int argc, char *argv[])
 		case '?':
 		default:
 			usage(prog_name);
+		}
 	}
 
 	argc -= optind;
@@ -252,9 +249,10 @@ int main(int argc, char *argv[])
 	if (d_fd < 0 && !Nflag)
 		errx(1, "failed to open disk for writing %s: ", special);
 
-
-	#define BLKSSZGET 1
-	#define BLKGETSIZE64 2
+	#ifndef __linux__
+		#define BLKSSZGET 1
+		#define BLKGETSIZE64 2
+	#endif
 
 	if (sectorsize == 0)
 		if (ioctl(d_fd, BLKSSZGET, &sectorsize) == -1)

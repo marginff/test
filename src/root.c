@@ -185,7 +185,6 @@ ffs_update_dinode_ckhash(struct fs *fs, struct ufs2_dinode *dip)
 void
 iput(union dinode *ip, ino_t ino)
 {
-	union dinodep dp;
 
 	bread(part_ofs + fsbtodb(&sblock, cgtod(&sblock, 0)), (char *)&acg,
 	    sblock.fs_cgsize);
